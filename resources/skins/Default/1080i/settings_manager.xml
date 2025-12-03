@@ -1280,6 +1280,62 @@
                           <onclick>back</onclick>
                           <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=open_external_scraper_settings)</onclick>
                       </item>
+        <!-- Jellyfin -->
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <property name="setting_label">Jellyfin</property>
+                          <property name="setting_type">separator</property>
+                          <onclick>noop</onclick>
+                      </item>
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <property name="setting_label">Enable Jellyfin</property>
+                          <property name="setting_type">boolean</property>
+                          <property name="setting_value">$INFO[Window(10000).Property(fenlight.provider.jellyfin)]</property>
+                          <property name="setting_description">Enable this to use your Jellyfin server as an internal scraper within Fen Light</property>
+                          <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=settings_manager.set_boolean&amp;setting_id=provider.jellyfin)</onclick>
+                      </item>
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <property name="setting_label">Server URL</property>
+                          <property name="setting_type">numeric</property>
+                          <property name="setting_value">$INFO[Window(10000).Property(fenlight.jellyfin.url)]</property>
+                          <property name="setting_description">Enter the base URL of your Jellyfin server (e.g. http://192.168.1.10:8096)</property>
+                          <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=settings_manager.set_string&amp;setting_id=jellyfin.url)</onclick>
+                      </item>
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <property name="setting_label">Username</property>
+                          <property name="setting_type">numeric</property>
+                          <property name="setting_value">$INFO[Window(10000).Property(fenlight.jellyfin.username)]</property>
+                          <property name="setting_description">Enter your Jellyfin username</property>
+                          <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=settings_manager.set_string&amp;setting_id=jellyfin.username)</onclick>
+                      </item>
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <property name="setting_label">Password</property>
+                          <property name="setting_type">numeric</property>
+                          <property name="setting_value">$INFO[Window(10000).Property(fenlight.jellyfin.password)]</property>
+                          <property name="setting_description">Enter your Jellyfin password</property>
+                          <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=settings_manager.set_string&amp;setting_id=jellyfin.password)</onclick>
+                      </item>
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <property name="setting_label">Library Id (optional)</property>
+                          <property name="setting_type">numeric</property>
+                          <property name="setting_value">$INFO[Window(10000).Property(fenlight.jellyfin.library_id)]</property>
+                          <property name="setting_description">Optionally limit scraping to a specific Jellyfin library (ParentId)</property>
+                          <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=settings_manager.set_string&amp;setting_id=jellyfin.library_id)</onclick>
+                      </item>
+                      <item>
+                          <visible>Container(2000).HasFocus(50)</visible>
+                          <visible>String.IsEqual(Window(10000).Property(fenlight.provider.jellyfin),true)</visible>
+                          <property name="setting_label">Priority (Lower Number Equals Higher Priority)</property>
+                          <property name="setting_type">numeric</property>
+                          <property name="setting_value">$INFO[Window(10000).Property(fenlight.jellyfin.priority)]</property>
+                          <property name="setting_description">Choose the order in which Jellyfin results appear in relation to other providers.</property>
+                          <onclick>RunPlugin(plugin://plugin.video.fenlight/?mode=settings_manager.set_numeric&amp;setting_id=jellyfin.priority)</onclick>
+                      </item>
         <!-- Trakt -->
                       <item>
                           <visible>Container(2000).HasFocus(50)</visible>
