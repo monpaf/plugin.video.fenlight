@@ -308,6 +308,13 @@ def default_settings():
 #=====================================================================================#
 #====================================ACCOUNTS====================================#
 #=====================================================================================#
+# ==================== Jellyfin
+{'setting_id': 'provider.jellyfin', 'setting_type': 'boolean', 'setting_default': 'false'},
+{'setting_id': 'jellyfin.url', 'setting_type': 'string', 'setting_default': ''},
+{'setting_id': 'jellyfin.username', 'setting_type': 'string', 'setting_default': ''},
+{'setting_id': 'jellyfin.password', 'setting_type': 'string', 'setting_default': ''},
+{'setting_id': 'jellyfin.library_id', 'setting_type': 'string', 'setting_default': ''},
+{'setting_id': 'jellyfin.priority', 'setting_type': 'action', 'setting_default': '10', 'min_value': '1', 'max_value': '10'},
 #==================== External
 {'setting_id': 'provider.external', 'setting_type': 'boolean', 'setting_default': 'false'},
 {'setting_id': 'external_scraper.name', 'setting_type': 'string', 'setting_default': 'empty_setting'},

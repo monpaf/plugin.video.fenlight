@@ -3,6 +3,21 @@ from caches.settings_cache import get_setting, set_setting, default_setting_valu
 from modules.kodi_utils import translate_path, get_property
 # from modules.kodi_utils import logger
 
+def jellyfin_enabled():
+	return get_setting('fenlight.provider.jellyfin', 'false') == 'true'
+
+def jellyfin_url():
+	return get_setting('fenlight.jellyfin.url', '')
+
+def jellyfin_username():
+	return get_setting('fenlight.jellyfin.username', '')
+
+def jellyfin_password():
+	return get_setting('fenlight.jellyfin.password', '')
+
+def jellyfin_library_id():
+	return get_setting('fenlight.jellyfin.library_id', '')
+
 def tmdb_api_key():
 	return get_setting('fenlight.tmdb_api', '')
 
@@ -273,6 +288,7 @@ def results_sort_order():
 
 def active_internal_scrapers():
 	settings = ['provider.external', 'provider.easynews', 'provider.folders']
+	settings.append('provider.jellyfin')
 	settings_append = settings.append
 	for item in [('rd', 'provider.rd_cloud'), ('pm', 'provider.pm_cloud'), ('ad', 'provider.ad_cloud'), ('oc', 'provider.oc_cloud'), ('tb', 'provider.tb_cloud')]:
 		if enabled_debrids_check(item[0]): settings_append(item[1])
@@ -288,8 +304,9 @@ def provider_sort_ranks():
 	oc_priority = int(get_setting('fenlight.oc.priority', '10'))
 	ed_priority = int(get_setting('fenlight.ed.priority', '10'))
 	tb_priority = int(get_setting('fenlight.tb.priority', '10'))
+	jellyfin_priority = int(get_setting('fenlight.jellyfin.priority', '11'))
 	return {'easynews': en_priority, 'real-debrid': rd_priority, 'premiumize.me': pm_priority, 'alldebrid': ad_priority, 'offcloud': oc_priority, 'easydebrid': ed_priority,
-	'torbox': tb_priority, 'rd_cloud': rd_priority, 'pm_cloud': pm_priority, 'ad_cloud': ad_priority, 'oc_cloud': oc_priority, 'tb_cloud': tb_priority, 'folders': fo_priority}
+	'torbox': tb_priority, 'rd_cloud': rd_priority, 'pm_cloud': pm_priority, 'ad_cloud': ad_priority, 'oc_cloud': oc_priority, 'tb_cloud': tb_priority, 'folders': fo_priority, 'jellyfin': jellyfin_priority}
 
 def sort_to_top(provider):
 	sort_to_top_dict = {'folders': 'fenlight.results.sort_folders_first', 'rd_cloud': 'fenlight.results.sort_rdcloud_first', 'pm_cloud': 'fenlight.results.sort_pmcloud_first',
