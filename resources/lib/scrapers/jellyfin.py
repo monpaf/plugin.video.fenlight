@@ -103,8 +103,10 @@ class source:
 						'scrape_provider': self.scrape_provider,
 						'direct_debrid_link': True,
 						'folder_id': '',
-						'cache_type': 'jellyfin'
+						'cache_type': 'jellyfin',
+						'jellyfin_id': item_id,  # <--- ajouté
 					}
+
 					logger('###JELLYFIN SCRAPER###', 'built source_item: %s' % repr(source_item))
 					sources_append(source_item)
 				except Exception as e:

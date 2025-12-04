@@ -5,7 +5,9 @@ from threading import Thread
 from apis.trakt_api import make_trakt_slug
 from caches.settings_cache import get_setting
 from modules import kodi_utils as ku, settings as st, watched_status as ws
-# logger = ku.logger
+from apis.jellyfin_api import JellyfinAPI
+
+logger = ku.logger
 
 class FenLightPlayer(xbmc.Player):
 	def __init__ (self):
@@ -77,6 +79,37 @@ class FenLightPlayer(xbmc.Player):
 			ku.hide_busy_dialog()
 			ku.sleep(1000)
 			if st.auto_enable_subs(): self.showSubtitles(True)
+			# --- Forcer le sous-titre externe Jellyfin comme piste active ---
+			try:
+				playing_item = getattr(self, 'playing_item', None)
+				if isinstance(playing_item, dict):
+					provider = (
+						playing_item.get('scrape_provider')
+						or playing_item.get('source')
+						or playing_item.get('cache_type')
+					)
+					if provider == 'jellyfin':
+						streams = self.getAvailableSubtitleStreams()
+						logger('#########JELLYFIN PLAYER#########',
+							'monitor: available subtitle streams=%s' % repr(streams))
+						if streams:
+							forced_index = None
+							for i, name in enumerate(streams):
+								name_lower = (name or '').lower()
+								# 1) notre fichier externe: "jellyfin_<id> (Externe)"
+								if name_lower.startswith('jellyfin_'):
+									forced_index = i
+									break
+							# Si rien de spécial détecté, on préfère la première piste
+							if forced_index is None:
+								forced_index = 0
+
+							self.setSubtitleStream(forced_index)
+							logger('#########JELLYFIN PLAYER#########',
+								'monitor: forcing Jellyfin subtitle stream index=%d' % forced_index)
+			except Exception as e:
+				logger('#########JELLYFIN PLAYER#########',
+					'monitor: error while forcing Jellyfin external subtitles: %s' % repr(e))
 			while self.isPlayingVideo():
 				try:
 					if not ensure_dialog_dead:
@@ -150,6 +183,33 @@ class FenLightPlayer(xbmc.Player):
 				info_tag.setFilenameAndPath(self.url)
 			self.set_resume_point(listitem)
 			self.set_playback_properties()
+		try:
+				playing_item = getattr(self, 'playing_item', None)
+				if isinstance(playing_item, dict):
+						provider = (
+								playing_item.get('scrape_provider')
+								or playing_item.get('source')
+								or playing_item.get('cache_provider')
+						)
+						if provider == 'jellyfin':
+								jellyfin_id = playing_item.get('jellyfin_id')
+								logger('######JELLYFIN PLAYER######',
+ 											'make_listing: detected Jellyfin source, jellyfin_id=%s' % jellyfin_id)
+								if jellyfin_id:
+										api = JellyfinAPI()
+										subs_path = api.download_first_external_subtitle(jellyfin_id)
+										if subs_path:
+												logger('######JELLYFIN PLAYER######',
+ 															'make_listing: attaching subtitles to listitem: %s' % subs_path)
+												# IMPORTANT : on attache le chemin VFS (special://temp/...) au ListItem
+												listitem.setSubtitles([subs_path])
+										else:
+												logger('######JELLYFIN PLAYER######',
+ 															'make_listing: no subtitle downloaded for this item')
+		except Exception as e:
+				logger('######JELLYFIN PLAYER######',
+ 							'make_listing: error attaching Jellyfin subtitles: %s' % repr(e))
+
 		return listitem
 
 	def media_watched_marker(self, force_watched=False):

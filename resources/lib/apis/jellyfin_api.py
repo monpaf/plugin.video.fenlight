@@ -2,6 +2,8 @@
 import json
 import urllib.request
 import urllib.parse
+import os
+import xbmcvfs
 
 from modules.kodi_utils import logger
 from modules.settings import (
@@ -87,6 +89,99 @@ class JellyfinAPI:
         except Exception as e:
             logger('###JELLYFIN API###', 'auth error: %s' % repr(e))
             return False
+
+    def download_first_external_subtitle(self, item_id):
+        """
+        Télécharge un sous-titre (priorité aux externes) pour l'item Jellyfin donné.
+        Retourne le chemin local du fichier de sous-titre, ou None.
+        """
+        logger('###JELLYFIN API###', 'download_first_external_subtitle called with item_id=%s' % item_id)
+        if not item_id:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: missing item_id')
+            return None
+
+        if not self.authenticate():
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: auth failed')
+            return None
+
+        # 1) Récupérer l'item avec ses MediaSources/MediaStreams
+        try:
+            item = self._request('/Items/%s?Fields=MediaSources,MediaStreams' % item_id)
+        except Exception as e:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: error fetching item: %s' % repr(e))
+            return None
+
+        media_sources = item.get('MediaSources') or []
+        if not media_sources:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: no MediaSources')
+            return None
+
+        source = media_sources[0]
+        streams = source.get('MediaStreams') or []
+        if not streams:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: no MediaStreams')
+            return None
+
+        # 2) Chercher un sous-titre : priorité IsExternal, sinon n'importe lequel
+        subtitle_stream = None
+        for s in streams:
+            if s.get('Type') == 'Subtitle' and s.get('IsExternal'):
+                subtitle_stream = s
+                break
+        if subtitle_stream is None:
+            for s in streams:
+                if s.get('Type') == 'Subtitle':
+                    subtitle_stream = s
+                    break
+
+        if subtitle_stream is None:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: no subtitle stream found')
+            return None
+
+        subtitle_index = subtitle_stream.get('Index')
+        media_source_id = source.get('Id') or item_id
+        if subtitle_index is None:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: subtitle Index is None')
+            return None
+
+        # 3) Construire l'URL SRT
+        path = '/Videos/%s/%s/Subtitles/%s/0/Stream.srt' % (item_id, media_source_id, subtitle_index)
+        url = self.base_url + path
+        headers = {
+            'Accept': '*/*',
+            'X-Emby-Authorization': self.client_header,
+        }
+        if self.token:
+            headers['X-Emby-Token'] = self.token
+
+        logger('###JELLYFIN API###', 'download_first_external_subtitle: downloading from %s' % url)
+        try:
+            req = urllib.request.Request(url, headers=headers, method='GET')
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+        except Exception as e:
+            logger('###JELLYFIN API###', 'download_first_external_subtitle: download error %s' % repr(e))
+            return None
+
+        # 4) Sauvegarde dans un fichier temporaire
+                # 4) Sauvegarde dans le répertoire temporaire de Kodi (special://temp)
+        try:
+            temp_dir = xbmcvfs.translatePath('special://temp/')
+            if not os.path.isdir(temp_dir):
+                os.makedirs(temp_dir, exist_ok=True)
+
+            subs_path = os.path.join(temp_dir, 'jellyfin_%s.srt' % item_id)
+            with open(subs_path, 'wb') as f:
+                f.write(data)
+
+            logger('######JELLYFIN API######',
+                   'download_first_external_subtitle: saved to %s' % subs_path)
+            return subs_path
+        except Exception as e:
+            logger('######JELLYFIN API######',
+                   'download_first_external_subtitle: error saving file %s' % repr(e))
+            return None
+
 
     def _libraries(self):
         """
