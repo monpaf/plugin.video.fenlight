@@ -59,8 +59,12 @@ def movie_meta(id_type, media_id, api_key, mpaa_region, current_date, current_ti
 		title, original_title = data_get('title'), data_get('original_title')
 		try:
 			translations = data_get('translations')['translations']
+			french_plot = next((i['data']['overview'] for i in translations if i['iso_639_1'] == 'fr'), None)
+			plot = french_plot if french_plot else data_get('overview', '')
 			english_title = next(i['data']['title'] for i in translations if i['iso_639_1'] == 'en')
-		except: english_title = None
+		except:
+			plot = data_get('overview', '')
+			english_title = None
 		try: year = str(data_get('release_date').split('-')[0])
 		except: year = ''
 		try: duration = int(data_get('runtime', '90') * 60)
@@ -193,8 +197,12 @@ def tvshow_meta(id_type, media_id, api_key, mpaa_region, current_date, current_t
 		title, original_title = data_get('name'), data_get('original_name')
 		try:
 			translations = data_get('translations')['translations']
+			french_plot = next((i['data']['overview'] for i in translations if i['iso_639_1'] == 'fr'), None)
+			plot = french_plot if french_plot else data_get('overview', '')
 			english_title = [i['data']['name'] for i in translations if i['iso_639_1'] == 'en'][0]
-		except: english_title = None
+		except:
+			plot = data_get('overview', '')
+			english_title = None
 		try: year = str(data_get('first_air_date').split('-')[0]) or ''
 		except: year = ''
 		try: duration = min(data_get('episode_run_time'))*60
